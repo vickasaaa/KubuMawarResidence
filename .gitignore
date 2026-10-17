@@ -5,6 +5,14 @@
 *.log
 *.tsbuildinfo
 *.chunk
+/vendor
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+auth.json
+dist
+dist-ssr
 
 # ──────────────────────────────────────
 # Frontend (Vue / Vite)
