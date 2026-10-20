@@ -55,6 +55,16 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        if (!$request->filled('guest_phone') && $request->filled('phone')) {
+            $request->merge(['guest_phone' => $request->phone]);
+        }
+        if (!$request->filled('guest_email') && $request->filled('email')) {
+            $request->merge(['guest_email' => $request->email]);
+        }
+        if (!$request->filled('guest_email') && $request->user()) {
+            $request->merge(['guest_email' => $request->user()->email]);
+        }
+
         $validator = Validator::make($request->all(), [
             'room_id' => 'required|exists:rooms,id',
             'guest_name' => 'required|string|max:255',

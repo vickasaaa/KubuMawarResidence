@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
 // ─── Form State ───
 const name = ref('')
@@ -74,6 +75,12 @@ const isReady = ref(false)
 
 onMounted(() => {
   setTimeout(() => { isReady.value = true }, 50)
+
+  if (route.query.error === 'google_auth_failed') {
+    errorMessage.value = 'Google sign-in failed. Please try again or check your account permissions.'
+  } else if (route.query.error) {
+    errorMessage.value = 'Authentication error: ' + String(route.query.error)
+  }
 })
 </script>
 
