@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -8,7 +8,17 @@ const router = useRouter()
 const isScrolled = ref(false)
 const scrollY = ref(0)
 const mouse = ref({ x: 0, y: 0, hover: false })
-const selectedProperty = ref<'residence' | 'suwung'>('residence')
+const selectedProperty = ref<'residence' | 'suwung' | null>(null)
+
+const selectProperty = (id: 'residence' | 'suwung') => {
+  selectedProperty.value = id
+  nextTick(() => {
+    const el = document.getElementById('rooms-list-section')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  })
+}
 
 const goToLogin = () => {
   router.push('/login')
@@ -121,6 +131,7 @@ const fetchRoomsFromApi = async () => {
 
 // Active rooms based on selected property
 const activeRooms = computed(() => {
+  if (!selectedProperty.value) return []
   return rooms.value.filter(r => r.property_type === selectedProperty.value)
 })
 
@@ -202,7 +213,7 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
     ]">
       <div class="flex items-center gap-3 cursor-pointer" @click="scrollTo('home')" @mouseenter="mouse.hover=true" @mouseleave="mouse.hover=false">
         <img src="/images/logo.png" alt="Logo" class="w-10 h-10 object-contain filter brightness-0 invert" />
-        <span class="font-display text-xl tracking-wide font-medium">Kubu Mawar Residence</span>
+        <span class="font-display text-xl tracking-wide font-medium"></span>
       </div>
       
       <div class="hidden md:flex gap-10 text-sm tracking-[0.15em] uppercase">
@@ -290,20 +301,17 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
     </section>
 
     <!-- 3. PEMILIHAN HUNIAN (2 OPSI HUNIAN BERGAMBAR -> KLIK UNTUK MELIHAT TIPE KAMAR & FASILITAS) -->
-    <section id="rooms" class="py-28 bg-[#121212] text-white px-6 md:px-12">
+    <section id="rooms" class="py-28 bg-[#F4EFEA] text-[#1A1A1A] px-6 md:px-12 border-t border-[#E8E2D9]">
       <div class="max-w-[1400px] mx-auto space-y-16">
         
         <!-- Section Title -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 reveal-el">
           <div>
-            <p class="text-kubu-red-light font-mono text-xs uppercase tracking-[0.3em] font-semibold mb-2">
-              Pilihan Hunian Kubu Mawar
-            </p>
-            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl text-white">
+            <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl text-[#1A1A1A]">
               Our Spaces
             </h2>
           </div>
-          <p class="text-white/60 text-sm font-light max-w-md">
+          <p class="text-[#1A1A1A]/70 text-sm font-light max-w-md leading-relaxed">
             Pilih salah satu hunian di bawah ini untuk melihat detail tipe kamar, fasilitas lengkap, dan tarif sewa.
           </p>
         </div>
@@ -313,58 +321,58 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
           <div 
             v-for="prop in properties" 
             :key="prop.id"
-            @click="selectedProperty = prop.id as any"
-            class="group relative rounded-2xl overflow-hidden border cursor-pointer transition-all duration-500 flex flex-col"
+            @click="selectProperty(prop.id as any)"
+            class="group relative rounded-2xl overflow-hidden border cursor-pointer transition-all duration-500 flex flex-col bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04)]"
             :class="[
               selectedProperty === prop.id 
-                ? 'border-kubu-red ring-2 ring-kubu-red/50 shadow-2xl shadow-kubu-red/10 scale-[1.01]' 
-                : 'border-white/10 hover:border-white/30 opacity-75 hover:opacity-100'
+                ? 'border-kubu-red ring-2 ring-kubu-red/40 shadow-xl shadow-kubu-red/10 scale-[1.01]' 
+                : 'border-[#E8E2D9] hover:border-[#C4B7A6] hover:shadow-lg'
             ]"
             @mouseenter="mouse.hover=true" @mouseleave="mouse.hover=false"
           >
             <!-- Property Cover Image -->
-            <div class="relative h-64 sm:h-72 overflow-hidden bg-black">
+            <div class="relative h-64 sm:h-72 overflow-hidden bg-[#EFEBE4]">
               <img 
                 :src="prop.image" 
                 :alt="prop.name" 
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-[#121212] via-black/40 to-transparent"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
 
               <!-- Top Badges -->
               <div class="absolute top-4 left-4 flex items-center gap-2">
-                <span class="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider text-white" :class="prop.id === 'residence' ? 'bg-kubu-red' : 'bg-[#8E5B23]'">
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider text-white shadow-sm" :class="prop.id === 'residence' ? 'bg-kubu-red' : 'bg-[#8E5B23]'">
                   {{ prop.category }}
                 </span>
-                <span class="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-[11px] font-mono text-white/90">
+                <span class="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-[11px] font-mono text-white">
                   {{ prop.location }}
                 </span>
               </div>
 
               <!-- Selected Active Indicator -->
-              <div v-if="selectedProperty === prop.id" class="absolute top-4 right-4 px-3 py-1 bg-kubu-red text-white text-xs font-mono uppercase font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+              <div v-if="selectedProperty === prop.id" class="absolute top-4 right-4 px-3 py-1 bg-kubu-red text-white text-xs font-mono uppercase font-bold rounded-full flex items-center gap-1.5 shadow-md">
                 <span>✓</span>
                 <span>Hunian Terpilih</span>
               </div>
             </div>
 
             <!-- Property Card Body -->
-            <div class="p-6 sm:p-8 bg-[#181818] flex-1 flex flex-col justify-between space-y-4">
+            <div class="p-6 sm:p-8 bg-white flex-1 flex flex-col justify-between space-y-4">
               <div>
-                <h3 class="font-display text-2xl sm:text-3xl text-white group-hover:text-kubu-red-light transition-colors mb-2">
+                <h3 class="font-display text-2xl sm:text-3xl text-[#1A1A1A] group-hover:text-kubu-red transition-colors mb-2">
                   {{ prop.name }}
                 </h3>
-                <p class="text-white/70 text-sm font-light leading-relaxed">
+                <p class="text-[#1A1A1A]/70 text-sm font-light leading-relaxed">
                   {{ prop.description }}
                 </p>
               </div>
 
               <!-- Rental Note Pill -->
-              <div class="pt-4 border-t border-white/10 flex items-center justify-between">
-                <span class="text-xs font-mono font-semibold" :class="prop.id === 'residence' ? 'text-kubu-red-light' : 'text-amber-400'">
+              <div class="pt-4 border-t border-[#E8E2D9] flex items-center justify-between">
+                <span class="text-xs font-mono font-semibold" :class="prop.id === 'residence' ? 'text-kubu-red' : 'text-[#8E5B23]'">
                   ✦ {{ prop.rentalNote }}
                 </span>
-                <span class="text-xs font-mono uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">
+                <span class="text-xs font-mono uppercase tracking-widest text-[#1A1A1A]/50 group-hover:text-kubu-red transition-colors font-medium">
                   {{ selectedProperty === prop.id ? 'Sedang Ditampilkan ↓' : 'Klik Untuk Memilih →' }}
                 </span>
               </div>
@@ -372,18 +380,18 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
           </div>
         </div>
 
-        <!-- ─── DAFTAR TIPE KAMAR DARI HUNIAN TERPILIH ─── -->
-        <div class="space-y-8 pt-4">
-          <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <!-- ─── DAFTAR TIPE KAMAR DARI HUNIAN TERPILIH (Hanya Muncul Jika Hunian Diklik) ─── -->
+        <div v-if="selectedProperty" id="rooms-list-section" class="space-y-8 pt-8 border-t border-[#E8E2D9] mt-8">
+          <div class="flex items-center justify-between border-b border-[#E8E2D9] pb-4">
             <div>
-              <p class="text-xs font-mono text-white/50 uppercase tracking-widest">
+              <p class="text-xs font-mono text-kubu-red uppercase tracking-widest font-semibold">
                 Daftar Tipe Kamar
               </p>
-              <h3 class="font-display text-2xl sm:text-3xl text-white mt-1">
+              <h3 class="font-display text-2xl sm:text-3xl text-[#1A1A1A] mt-1">
                 Kamar di {{ selectedProperty === 'residence' ? 'Kubu Mawar Residence (Home Stay)' : 'Kubu Mawar Suwung (Kost-Kostan)' }}
               </h3>
             </div>
-            <span class="text-xs font-mono text-white/50">
+            <span class="text-xs font-mono text-[#1A1A1A]/60 px-3.5 py-1.5 bg-white rounded-full border border-[#E8E2D9] shadow-sm">
               {{ activeRooms.length }} Unit Tersedia
             </span>
           </div>
@@ -393,33 +401,33 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
             <div 
               v-for="room in activeRooms" 
               :key="room.id"
-              class="bg-[#181818] border border-white/10 rounded-2xl overflow-hidden hover:border-white/30 transition-all duration-300 flex flex-col justify-between group"
+              class="bg-white border border-[#E8E2D9] rounded-2xl overflow-hidden hover:border-kubu-red/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm"
             >
               <div>
                 <!-- Room Image -->
-                <div class="relative h-56 overflow-hidden bg-black">
+                <div class="relative h-56 overflow-hidden bg-[#EFEBE4]">
                   <img 
                     :src="room.image" 
                     :alt="room.name" 
                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div class="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
 
                   <!-- Room Number & Status -->
-                  <div class="absolute top-3 left-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm rounded-md text-xs font-mono text-white">
+                  <div class="absolute top-3 left-3 px-2.5 py-1 bg-white/95 backdrop-blur-sm rounded-md text-xs font-mono text-[#1A1A1A] font-semibold shadow-sm border border-[#E8E2D9]">
                     {{ room.room_number }}
                   </div>
 
                   <div class="absolute top-3 right-3">
                     <span 
                       v-if="room.status === 'available'"
-                      class="px-2.5 py-1 bg-emerald-600/90 text-white text-[11px] font-mono font-bold rounded-md uppercase"
+                      class="px-2.5 py-1 bg-emerald-600 text-white text-[11px] font-mono font-bold rounded-md uppercase shadow-sm"
                     >
                       Tersedia
                     </span>
                     <span 
                       v-else
-                      class="px-2.5 py-1 bg-rose-700/90 text-white text-[11px] font-mono font-bold rounded-md uppercase"
+                      class="px-2.5 py-1 bg-rose-600 text-white text-[11px] font-mono font-bold rounded-md uppercase shadow-sm"
                     >
                       Terisi
                     </span>
@@ -429,25 +437,25 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
                 <!-- Room Details -->
                 <div class="p-6 space-y-4">
                   <div>
-                    <span class="text-[11px] font-mono uppercase tracking-wider text-white/50 block mb-1">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-kubu-red font-semibold block mb-1">
                       {{ room.type_label }}
                     </span>
-                    <h4 class="font-display text-xl text-white group-hover:text-kubu-red-light transition-colors">
+                    <h4 class="font-display text-xl text-[#1A1A1A] group-hover:text-kubu-red transition-colors">
                       {{ room.name }}
                     </h4>
-                    <p class="text-white/60 text-xs font-light mt-2 line-clamp-2 leading-relaxed">
+                    <p class="text-[#1A1A1A]/70 text-xs font-light mt-2 line-clamp-2 leading-relaxed">
                       {{ room.description }}
                     </p>
                   </div>
 
                   <!-- FASILITAS LENGKAP DIJABARKAN -->
-                  <div class="space-y-2 pt-2 border-t border-white/10">
-                    <p class="text-[11px] font-mono uppercase tracking-wider text-white/50 font-semibold">
+                  <div class="space-y-2 pt-3 border-t border-[#E8E2D9]">
+                    <p class="text-[11px] font-mono uppercase tracking-wider text-[#1A1A1A]/60 font-semibold">
                       Fasilitas Kamar:
                     </p>
-                    <ul class="space-y-1.5 text-xs text-white/80 font-light">
+                    <ul class="space-y-1.5 text-xs text-[#1A1A1A]/80 font-light">
                       <li v-for="(feat, fi) in room.features" :key="fi" class="flex items-center gap-2">
-                        <span class="text-kubu-red-light font-bold">✓</span>
+                        <span class="text-kubu-red font-bold">✓</span>
                         <span>{{ feat }}</span>
                       </li>
                     </ul>
@@ -457,18 +465,18 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
 
               <!-- PRICING & BOOKING ACTION -->
               <div class="p-6 pt-0 space-y-4">
-                <div class="p-4 bg-black/40 rounded-xl border border-white/10 space-y-2">
+                <div class="p-4 bg-[#FBF9F6] rounded-xl border border-[#E8E2D9] space-y-2">
                   <!-- IF RESIDENCE: JABARKAN BISA MINGGUAN BISA BULANAN -->
                   <template v-if="room.property_type === 'residence'">
                     <div class="flex items-center justify-between text-xs">
-                      <span class="text-white/50 font-mono">Tarif Per Minggu:</span>
-                      <span class="font-mono text-kubu-red-light font-bold text-sm">
+                      <span class="text-[#1A1A1A]/60 font-mono">Tarif Per Minggu:</span>
+                      <span class="font-mono text-kubu-red font-bold text-sm">
                         {{ formatRupiah(room.price_weekly) }}
                       </span>
                     </div>
-                    <div class="flex items-center justify-between text-xs pt-1.5 border-t border-white/10">
-                      <span class="text-white/50 font-mono">Tarif Per Bulan:</span>
-                      <span class="font-mono text-emerald-400 font-bold text-sm">
+                    <div class="flex items-center justify-between text-xs pt-1.5 border-t border-[#E8E2D9]">
+                      <span class="text-[#1A1A1A]/60 font-mono">Tarif Per Bulan:</span>
+                      <span class="font-mono text-emerald-700 font-bold text-sm">
                         {{ formatRupiah(room.price_monthly) }}
                       </span>
                     </div>
@@ -477,14 +485,14 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
                   <!-- IF SUWUNG: JABARKAN HANYA PER BULAN -->
                   <template v-else>
                     <div class="flex items-center justify-between text-xs">
-                      <span class="text-amber-400 font-mono uppercase text-[11px] font-semibold">
+                      <span class="text-[#8E5B23] font-mono uppercase text-[11px] font-semibold">
                         Khusus Per Bulan:
                       </span>
-                      <span class="font-mono text-amber-300 font-bold text-base">
-                        {{ formatRupiah(room.price_monthly) }} <span class="text-xs text-white/50 font-normal">/ bln</span>
+                      <span class="font-mono text-[#8E5B23] font-bold text-base">
+                        {{ formatRupiah(room.price_monthly) }} <span class="text-xs text-[#1A1A1A]/50 font-normal">/ bln</span>
                       </span>
                     </div>
-                    <p class="text-[10px] text-white/40 italic">
+                    <p class="text-[10px] text-[#1A1A1A]/50 italic">
                       *Kubu Mawar Suwung hanya melayani sistem sewa per bulan.
                     </p>
                   </template>
@@ -495,7 +503,7 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
                   <button 
                     v-if="room.status === 'available'"
                     @click="goToBooking(room.id)"
-                    class="w-full py-3 bg-kubu-red hover:bg-kubu-red-dark text-white rounded-xl font-mono text-xs uppercase tracking-widest font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    class="w-full py-3 bg-kubu-red hover:bg-kubu-red-dark text-white rounded-xl font-mono text-xs uppercase tracking-widest font-semibold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
                   >
                     <span>Pesan Kamar Ini</span>
                     <span>→</span>
@@ -503,7 +511,7 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
                   <button 
                     v-else
                     disabled
-                    class="w-full py-3 bg-white/5 text-white/30 rounded-xl font-mono text-xs uppercase tracking-widest cursor-not-allowed text-center border border-white/10"
+                    class="w-full py-3 bg-[#EFEBE4] text-[#1A1A1A]/40 rounded-xl font-mono text-xs uppercase tracking-widest cursor-not-allowed text-center border border-[#E8E2D9]"
                   >
                     Kamar Sedang Terisi
                   </button>
@@ -518,44 +526,59 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
     </section>
 
     <!-- 4. Candi Bentar Contact Section (Original) -->
-    <section id="contact" class="relative overflow-hidden min-h-screen flex flex-col pt-24 pb-6 bg-[#F7F5F0]">
-      <img src="/images/ornament-left.png" class="absolute left-0 top-0 h-full w-auto object-contain object-left pointer-events-none opacity-20 hidden lg:block" alt="" />
-      <img src="/images/ornament-right.png" class="absolute right-0 top-0 h-full w-auto object-contain object-right pointer-events-none opacity-20 hidden lg:block" alt="" />
+    <section id="contact" class="relative overflow-hidden min-h-screen flex flex-col pt-0 pb-6 bg-[#F7F5F0]">
+      <!-- Ornamen Tradisional Kiri & Kanan (Menyambung penuh dari atas sampai footer, dengan efek soft blur & opacity agar tidak terlalu merah menyala) -->
+      <img 
+        src="/images/ornament-left.png" 
+        class="absolute left-0 top-0 h-full w-14 sm:w-20 md:w-28 lg:w-auto max-w-[56px] sm:max-w-[80px] md:max-w-[120px] lg:max-w-[180px] object-cover lg:object-contain object-left pointer-events-none z-0 select-none" 
+        style="filter: blur(1px); opacity: 0.75;"
+        alt="Balinese Ornament Left" 
+      />
+      <img 
+        src="/images/ornament-right.png" 
+        class="absolute right-0 top-0 h-full w-14 sm:w-20 md:w-28 lg:w-auto max-w-[56px] sm:max-w-[80px] md:max-w-[120px] lg:max-w-[180px] object-cover lg:object-contain object-right pointer-events-none z-0 select-none" 
+        style="filter: blur(1px); opacity: 0.75;"
+        alt="Balinese Ornament Right" 
+      />
 
-      <div class="relative z-10 flex-1 flex items-stretch justify-center w-full max-w-[1200px] mx-auto px-4">
-        <div class="hidden md:flex items-stretch flex-shrink-0 w-1/4 max-w-[280px]">
-          <img src="/images/gate-left.png" class="h-full w-full object-contain object-right" alt="Candi Bentar Left" />
-        </div>
-
-        <div class="flex-1 flex flex-col items-center justify-center px-4 md:px-8">
-          <h2 class="font-display text-5xl md:text-[5rem] lg:text-[7rem] leading-none mb-8 lg:mb-12 reveal-el text-center">
-            Let's <i class="text-kubu-red">talk.</i>
-          </h2>
-
-          <div class="flex flex-col items-center gap-8 reveal-el" style="transition-delay: 150ms;">
-            <button 
-              @click="goToLogin"
-              @mouseenter="mouse.hover=true" 
-              @mouseleave="mouse.hover=false"
-              class="group relative inline-flex items-center gap-4 px-12 py-5 border-2 border-kubu-black overflow-hidden cursor-pointer transition-all duration-500 hover:border-kubu-red"
-            >
-              <span class="absolute inset-0 bg-kubu-red transform transition-transform duration-500 ease-out translate-y-full group-hover:translate-y-0"></span>
-              <span class="relative z-10 font-mono text-sm tracking-[0.3em] uppercase transition-colors duration-500 group-hover:text-white">Book Now</span>
-              <span class="relative z-10 transition-all duration-500 group-hover:text-white group-hover:translate-x-1">→</span>
-            </button>
+      <!-- Contact Main Area -->
+      <div class="relative z-10 flex-1 flex flex-col items-center justify-center w-full pt-16 md:pt-24 pb-4">
+        <div class="flex-1 flex items-stretch justify-center w-full max-w-[1200px] mx-auto px-4">
+          <div class="hidden md:flex items-stretch flex-shrink-0 w-1/4 max-w-[280px]">
+            <img src="/images/gate-left.png" class="h-full w-full object-contain object-right" alt="Candi Bentar Left" />
           </div>
-        </div>
 
-        <div class="hidden md:flex items-stretch flex-shrink-0 w-1/4 max-w-[280px]">
-          <img src="/images/gate-right.png" class="h-full w-full object-contain object-left" alt="Candi Bentar Right" />
+          <div class="flex-1 flex flex-col items-center justify-center px-8 sm:px-12 md:px-8">
+            <h2 class="font-display text-4xl sm:text-5xl md:text-[5rem] lg:text-[7rem] leading-none mb-8 lg:mb-12 reveal-el text-center">
+              Let's <i class="text-kubu-red">talk.</i>
+            </h2>
+
+            <div class="flex flex-col items-center gap-8 reveal-el" style="transition-delay: 150ms;">
+              <button 
+                @click="goToLogin"
+                @mouseenter="mouse.hover=true" 
+                @mouseleave="mouse.hover=false"
+                class="group relative inline-flex items-center gap-4 px-8 sm:px-12 py-4 sm:py-5 border-2 border-kubu-black overflow-hidden cursor-pointer transition-all duration-500 hover:border-kubu-red"
+              >
+                <span class="absolute inset-0 bg-kubu-red transform transition-transform duration-500 ease-out translate-y-full group-hover:translate-y-0"></span>
+                <span class="relative z-10 font-mono text-sm tracking-[0.3em] uppercase transition-colors duration-500 group-hover:text-white">Book Now</span>
+                <span class="relative z-10 transition-all duration-500 group-hover:text-white group-hover:translate-x-1">→</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="hidden md:flex items-stretch flex-shrink-0 w-1/4 max-w-[280px]">
+            <img src="/images/gate-right.png" class="h-full w-full object-contain object-left" alt="Candi Bentar Right" />
+          </div>
         </div>
       </div>
 
-      <div class="w-full max-w-[1400px] mx-auto px-6 md:px-12 mt-4 relative z-10">
+      <!-- Footer Area (100% Clean, No Ornaments) -->
+      <footer class="w-full max-w-[1400px] mx-auto px-6 md:px-12 mt-4 relative z-10">
         <div class="border-t border-[#1A1A1A]/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 reveal-el">
           <div class="flex items-center gap-3">
             <img src="/images/logo.png" class="w-8 h-8 object-contain" />
-            <span class="font-display font-semibold text-sm">Kubu Mawar Residence</span>
+            <span class="font-display font-semibold text-sm">Kubu Mawar</span>
           </div>
           <div class="flex flex-wrap justify-center items-center gap-6 md:gap-8 font-mono text-xs tracking-widest uppercase">
             <a :href="`https://wa.me/${contactInfo.whatsapp.replace(/\D/g, '')}`" target="_blank" class="hover:text-kubu-red transition-colors cursor-pointer" @mouseenter="mouse.hover=true" @mouseleave="mouse.hover=false">
@@ -570,12 +593,15 @@ const heroParallax = computed(() => `translateY(${scrollY.value * 0.4}px) scale(
             <a href="https://maps.google.com/?q=Kubu+Mawar+Residence+Bali" target="_blank" class="hover:text-kubu-red transition-colors cursor-pointer" @mouseenter="mouse.hover=true" @mouseleave="mouse.hover=false">
               Location
             </a>
+            <router-link to="/privacy" class="hover:text-kubu-red transition-colors cursor-pointer" @mouseenter="mouse.hover=true" @mouseleave="mouse.hover=false">
+              Privacy Policy
+            </router-link>
           </div>
           <p class="text-xs text-[#1A1A1A]/50 tracking-widest uppercase">
             &copy; {{ new Date().getFullYear() }} All Rights Reserved.
           </p>
         </div>
-      </div>
+      </footer>
     </section>
 
   </div>

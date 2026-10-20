@@ -80,6 +80,13 @@ onMounted(() => {
   if (route.query.registered === 'true') {
     successMessage.value = 'Registration successful! Please sign in with your new account.'
   }
+
+  // Show error if redirected from failed Google OAuth
+  if (route.query.error === 'google_auth_failed') {
+    errorMessage.value = 'Google sign-in failed. Please try again or check your account permissions.'
+  } else if (route.query.error) {
+    errorMessage.value = 'Authentication error: ' + String(route.query.error)
+  }
 })
 </script>
 

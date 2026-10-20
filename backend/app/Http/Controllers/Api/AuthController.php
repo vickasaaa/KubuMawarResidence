@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -87,6 +88,7 @@ class AuthController extends Controller
     {
         return Socialite::driver('google')
             ->stateless()
+            ->with(['prompt' => 'select_account'])
             ->redirect();
     }
 
@@ -104,18 +106,24 @@ class AuthController extends Controller
                 ->orWhere('email', $googleUser->getEmail())
                 ->first();
 
+            $name = $googleUser->getName() ?: ($googleUser->getNickname() ?: explode('@', $googleUser->getEmail())[0]);
+
             if ($user) {
                 // Update google_id if not set
+                $updateData = [];
                 if (!$user->google_id) {
-                    $user->update(['google_id' => $googleUser->getId()]);
+                    $updateData['google_id'] = $googleUser->getId();
                 }
                 if ($googleUser->getAvatar()) {
-                    $user->update(['avatar' => $googleUser->getAvatar()]);
+                    $updateData['avatar'] = $googleUser->getAvatar();
+                }
+                if (!empty($updateData)) {
+                    $user->update($updateData);
                 }
             } else {
                 // Create new user
                 $user = User::create([
-                    'name' => $googleUser->getName(),
+                    'name' => $name,
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
@@ -135,10 +143,14 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
+                'avatar' => $user->avatar,
             ]));
 
             return redirect("{$frontendUrl}/auth/callback?token={$token}&user={$userData}");
         } catch (\Exception $e) {
+            Log::error('Google OAuth callback failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
             $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
             return redirect("{$frontendUrl}/login?error=google_auth_failed");
         }

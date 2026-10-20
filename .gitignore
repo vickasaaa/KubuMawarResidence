@@ -61,3 +61,4 @@ backend/public/storage
 *.sln
 *.sw?
 Thumbs.db
+.chrome_debug_profile

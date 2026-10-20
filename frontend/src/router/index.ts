@@ -44,6 +44,16 @@ const router = createRouter({
       component: () => import('../pages/AdminDashboard.vue'),
       meta: { requiresAuth: true, role: 'admin' },
     },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('../pages/PrivacyPolicyPage.vue'),
+    },
+    {
+      path: '/about/privacy',
+      name: 'about-privacy',
+      redirect: '/privacy',
+    },
   ],
   scrollBehavior(_to, _from, savedPosition) {
     if (savedPosition) return savedPosition
